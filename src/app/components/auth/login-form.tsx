@@ -21,6 +21,7 @@ import {
   KeyRound,
   UserPlus,
 } from 'lucide-react';
+import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 
 const fontHeading = "font-manrope"; // Consistent with page
 
@@ -32,6 +33,8 @@ export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null); // Optional for login
+
+  const supabase = createSupabaseBrowserClient();
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -45,34 +48,29 @@ export function LoginForm() {
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        setError("Please enter a valid email address.");
-        setIsLoading(false);
-        return;
+      setError("Please enter a valid email address.");
+      setIsLoading(false);
+      return;
     }
 
     try {
-      const response = await fetch('/api/auth/login', { // Your backend login endpoint
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password, rememberMe }),
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password,
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.message || "Login failed. Please check your credentials.");
+      if (signInError) {
+        setError(signInError.message || "Login failed. Please check your credentials.");
+      } else if (data.session) {
+        setSuccessMessage("Login successful! Redirecting...");
+        router.refresh(); // Important for updating server-side auth state checks
+        router.push('/dashboard');
       } else {
-        // Login successful, backend should have set a session cookie
-        setSuccessMessage(data.message || "Login successful! Redirecting...");
-        // Redirect to dashboard. Backend might specify redirectUrl or frontend knows it.
-        // In a real app with NextAuth.js, the session update might trigger redirect automatically.
-        router.push(data.redirectUrl || '/dashboard');
+        // Should not happen if error is null and session is null, but good to cover
+        setError("An unexpected issue occurred during login.");
       }
-    } catch (err) {
-      console.error("Login error:", err);
-      setError("Failed to connect to the server. Please check your internet connection.");
+    } catch (err: any) {
+      setError(err.message || "An unexpected error occurred.");
     } finally {
       setIsLoading(false);
     }
