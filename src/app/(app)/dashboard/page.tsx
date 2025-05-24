@@ -1,5 +1,6 @@
 // app/dashboard/page.tsx
 import Link from 'next/link';
+
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -48,6 +49,8 @@ import {
   LayoutGrid,
 } from 'lucide-react';
 
+import { LogoutButton } from '@/app/components/auth/logout-button';
+
 // Typography Helpers (define these in tailwind.config.js or use directly)
 const fontHeading = "font-manrope"; // Example: Manrope
 const fontBody = "font-inter";   // Example: Inter
@@ -72,6 +75,12 @@ export default async function DashboardPage() {
   const currentTime = new Date().toLocaleTimeString('en-US', { timeZone: 'Africa/Lagos', hour: '2-digit', minute: '2-digit', hour12: true });
   const currentDate = new Date().toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', timeZone: 'Africa/Lagos' });
 
+  // In a real app with supabase, you'd get the user session on the server
+  // const cookieStore = cookies();
+  // const supabaseServer = createServerClient( ... cookieStore ... );
+  // const { data: { user } } = await supabaseServer.auth.getUser();
+  // For this example, we continue with mockUser. If `user` from Supabase is null, you'd redirect.
+
   return (
     <div className={`flex min-h-screen w-full bg-slate-100 dark:bg-slate-950 ${fontBody} selection:bg-indigo-500 selection:text-white`}>
       {/* Sidebar Navigation (Conceptual - might be in a layout file) */}
@@ -83,10 +92,10 @@ export default async function DashboardPage() {
         <nav className="flex flex-col gap-1 text-sm font-medium">
           {[
             { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, current: true },
-            { href: '/dashboard/links', label: 'My Link Pages', icon: Link2Icon },
-            { href: '/dashboard/sites', label: 'My Websites', icon: Globe2 },
-            { href: '/dashboard/analytics', label: 'Analytics', icon: BarChart3 },
-            { href: '/dashboard/settings', label: 'Settings', icon: Settings },
+            { href: '/links', label: 'My Link Pages', icon: Link2Icon },
+            { href: '/sites', label: 'My Websites', icon: Globe2 },
+            { href: '/analytics', label: 'Analytics', icon: BarChart3 },
+            { href: '/settings', label: 'Settings', icon: Settings },
           ].map((item) => (
             <Link
               key={item.label}
@@ -102,11 +111,11 @@ export default async function DashboardPage() {
             </Link>
           ))}
         </nav>
-        <div className="mt-auto">
+        <Link href='/create' className="mt-auto">
           <Button className="w-full bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white">
             <PlusCircle className="mr-2 h-5 w-5" /> Create New
           </Button>
-        </div>
+        </Link>
       </aside>
 
       {/* Main Content Area */}
@@ -118,7 +127,7 @@ export default async function DashboardPage() {
             <Button variant="outline" size="icon" className="sm:hidden">
               <LayoutDashboard className="h-5 w-5" /> {/* Or MenuIcon */}
             </Button>
-             <div className={`text-xl ${fontHeading} font-bold text-indigo-600 dark:text-indigo-400`}>FlowFolio</div>
+            <div className={`text-xl ${fontHeading} font-bold text-indigo-600 dark:text-indigo-400`}>FlowFolio</div>
           </div>
 
           {/* Search (Desktop) */}
@@ -157,8 +166,8 @@ export default async function DashboardPage() {
                     <AvatarFallback>{mockUser.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                   </Avatar>
                   <div className="hidden md:flex flex-col items-start">
-                     <span className={`text-xs font-medium text-slate-700 dark:text-slate-200 ${fontHeading}`}>{mockUser.name}</span>
-                     <ChevronDown className="h-3 w-3 text-slate-500 dark:text-slate-400" />
+                    <span className={`text-xs font-medium text-slate-700 dark:text-slate-200 ${fontHeading}`}>{mockUser.name}</span>
+                    <ChevronDown className="h-3 w-3 text-slate-500 dark:text-slate-400" />
                   </div>
                 </Button>
               </DropdownMenuTrigger>
@@ -175,7 +184,7 @@ export default async function DashboardPage() {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="text-red-600 dark:text-red-400 hover:!bg-red-50 dark:hover:!bg-red-900/50">
-                  <span>Log out</span>
+                  <LogoutButton asDropdownItem={true} />
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -229,11 +238,11 @@ export default async function DashboardPage() {
                 <p className="text-xs text-slate-500 dark:text-slate-400">From link pages</p>
               </CardContent>
             </Card>
-             <Card className="bg-indigo-50 dark:bg-indigo-900/40 border-indigo-200 dark:border-indigo-700/60 flex flex-col justify-center items-center p-4 hover:shadow-lg transition-shadow">
-                <Button size="lg" className="w-full h-full text-base bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white">
-                  <PlusCircle className="mr-2 h-5 w-5" /> Create New Project
-                </Button>
-             </Card>
+            <Card className="bg-indigo-50 dark:bg-indigo-900/40 border-indigo-200 dark:border-indigo-700/60 flex flex-col justify-center items-center p-4 hover:shadow-lg transition-shadow">
+              <Button size="lg" className="w-full h-full text-base bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white">
+                <Link href='/create'><PlusCircle className="mr-2 h-5 w-5"/> Create New Project</Link>
+              </Button>
+            </Card>
           </div>
 
           {/* Projects List */}
@@ -242,7 +251,7 @@ export default async function DashboardPage() {
               <h2 className={`text-xl sm:text-2xl ${fontHeading} font-semibold text-slate-900 dark:text-slate-50`}>My Projects</h2>
               <div className="flex items-center gap-2">
                 <Input type="search" placeholder="Filter projects..." className="hidden md:block h-9 w-56 bg-white dark:bg-slate-800/70 border-slate-300 dark:border-slate-700" />
-                 {/* Theme Toggle Button - assuming it's globally available or part of dashboard layout */}
+                {/* Theme Toggle Button - assuming it's globally available or part of dashboard layout */}
                 {/* <ThemeToggleButton /> */}
               </div>
             </div>
@@ -260,87 +269,87 @@ export default async function DashboardPage() {
                     {mockProjects
                       .filter(p => tabValue === 'all' || p.type.toLowerCase().replace(' ', '_') + 's' === tabValue)
                       .map((project) => (
-                      <Card key={project.id} className="bg-white dark:bg-slate-800/70 border-slate-200 dark:border-slate-700/80 shadow-sm hover:shadow-lg transition-shadow duration-300 flex flex-col">
-                        <CardHeader className="pb-3">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <CardTitle className={`text-lg ${fontHeading} font-semibold text-slate-800 dark:text-slate-100 mb-1`}>
-                                <Link href={project.url !== '#' ? project.url : '#'} target={project.url !== '#' ? "_blank" : "_self"} className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
-                                  {project.title}
-                                </Link>
-                              </CardTitle>
-                              <div className="flex items-center gap-2">
-                                <Badge variant={project.type === 'Link Page' ? 'default' : 'secondary'}
-                                  className={project.type === 'Link Page'
-                                    ? 'bg-sky-100 text-sky-700 dark:bg-sky-900 dark:text-sky-300 border-sky-200 dark:border-sky-700'
-                                    : 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300 border-purple-200 dark:border-purple-700'
-                                  }
-                                >
-                                  {project.type === 'Link Page' ? <Link2Icon className="mr-1 h-3 w-3" /> : <Globe2 className="mr-1 h-3 w-3" />}
-                                  {project.type}
-                                </Badge>
-                                <Badge variant={project.status === 'Published' ? 'outline' : 'destructive'}
-                                  className={project.status === 'Published'
-                                    ? 'border-green-500/70 text-green-600 dark:border-green-400/50 dark:text-green-400'
-                                    : 'border-amber-500/70 text-amber-600 dark:border-amber-400/50 dark:text-amber-400'
-                                  }
-                                >
-                                  {project.status}
-                                </Badge>
+                        <Card key={project.id} className="bg-white dark:bg-slate-800/70 border-slate-200 dark:border-slate-700/80 shadow-sm hover:shadow-lg transition-shadow duration-300 flex flex-col">
+                          <CardHeader className="pb-3">
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <CardTitle className={`text-lg ${fontHeading} font-semibold text-slate-800 dark:text-slate-100 mb-1`}>
+                                  <Link href={project.url !== '#' ? project.url : '#'} target={project.url !== '#' ? "_blank" : "_self"} className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+                                    {project.title}
+                                  </Link>
+                                </CardTitle>
+                                <div className="flex items-center gap-2">
+                                  <Badge variant={project.type === 'Link Page' ? 'default' : 'secondary'}
+                                    className={project.type === 'Link Page'
+                                      ? 'bg-sky-100 text-sky-700 dark:bg-sky-900 dark:text-sky-300 border-sky-200 dark:border-sky-700'
+                                      : 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300 border-purple-200 dark:border-purple-700'
+                                    }
+                                  >
+                                    {project.type === 'Link Page' ? <Link2Icon className="mr-1 h-3 w-3" /> : <Globe2 className="mr-1 h-3 w-3" />}
+                                    {project.type}
+                                  </Badge>
+                                  <Badge variant={project.status === 'Published' ? 'outline' : 'destructive'}
+                                    className={project.status === 'Published'
+                                      ? 'border-green-500/70 text-green-600 dark:border-green-400/50 dark:text-green-400'
+                                      : 'border-amber-500/70 text-amber-600 dark:border-amber-400/50 dark:text-amber-400'
+                                    }
+                                  >
+                                    {project.status}
+                                  </Badge>
+                                </div>
                               </div>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 dark:text-slate-400">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem><Edit3 className="mr-2 h-4 w-4" /> Edit</DropdownMenuItem>
+                                  <DropdownMenuItem><Eye className="mr-2 h-4 w-4" /> Preview</DropdownMenuItem>
+                                  <DropdownMenuItem><BarChart3 className="mr-2 h-4 w-4" /> View Stats</DropdownMenuItem>
+                                  <DropdownMenuItem><Copy className="mr-2 h-4 w-4" /> Duplicate</DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem className="text-red-600 dark:text-red-400 hover:!bg-red-50 dark:hover:!bg-red-900/50">
+                                    <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </div>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 dark:text-slate-400">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem><Edit3 className="mr-2 h-4 w-4" /> Edit</DropdownMenuItem>
-                                <DropdownMenuItem><Eye className="mr-2 h-4 w-4" /> Preview</DropdownMenuItem>
-                                <DropdownMenuItem><BarChart3 className="mr-2 h-4 w-4" /> View Stats</DropdownMenuItem>
-                                <DropdownMenuItem><Copy className="mr-2 h-4 w-4" /> Duplicate</DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem className="text-red-600 dark:text-red-400 hover:!bg-red-50 dark:hover:!bg-red-900/50">
-                                  <Trash2 className="mr-2 h-4 w-4" /> Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="flex-grow pt-0">
-                          {project.previewImage && (
-                            <div className="aspect-video rounded-md overflow-hidden mb-3 border border-slate-200 dark:border-slate-700">
-                              <img src={project.previewImage} alt={`Preview of ${project.title}`} className="w-full h-full object-cover" />
+                          </CardHeader>
+                          <CardContent className="flex-grow pt-0">
+                            {project.previewImage && (
+                              <div className="aspect-video rounded-md overflow-hidden mb-3 border border-slate-200 dark:border-slate-700">
+                                <img src={project.previewImage} alt={`Preview of ${project.title}`} className="w-full h-full object-cover" />
+                              </div>
+                            )}
+                            <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400">
+                              <span>Views: {project.views.toLocaleString()}</span>
+                              {project.clicks !== undefined && <span>Clicks: {project.clicks.toLocaleString()}</span>}
+                              {project.pages !== undefined && <span>Pages: {project.pages}</span>}
                             </div>
-                          )}
-                          <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400">
-                            <span>Views: {project.views.toLocaleString()}</span>
-                            {project.clicks !== undefined && <span>Clicks: {project.clicks.toLocaleString()}</span>}
-                            {project.pages !== undefined && <span>Pages: {project.pages}</span>}
-                          </div>
-                        </CardContent>
-                        <CardFooter className="pt-3 text-xs text-slate-500 dark:text-slate-400">
-                          Last updated: {project.lastUpdated}
-                        </CardFooter>
-                      </Card>
-                    ))}
+                          </CardContent>
+                          <CardFooter className="pt-3 text-xs text-slate-500 dark:text-slate-400">
+                            Last updated: {project.lastUpdated}
+                          </CardFooter>
+                        </Card>
+                      ))}
                   </div>
                   {mockProjects.filter(p => tabValue === 'all' || p.type.toLowerCase().replace(' ', '_') + 's' === tabValue).length === 0 && (
                     <div className="text-center py-10 text-slate-500 dark:text-slate-400">
                       <LayoutGrid className="mx-auto h-12 w-12 mb-4 text-slate-400 dark:text-slate-500" />
                       <p className={`${fontHeading} text-lg`}>No projects in this category yet.</p>
                       <p className="text-sm">Ready to create your first {tabValue === "link_pages" ? "Link Page" : tabValue === "websites" ? "Website" : "project"}?</p>
-                       <Button size="sm" className="mt-4 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white">
-                         <PlusCircle className="mr-2 h-4 w-4" /> Create New
-                       </Button>
+                      <Button size="sm" className="mt-4 bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white">
+                        <PlusCircle className="mr-2 h-4 w-4" /> Create New
+                      </Button>
                     </div>
                   )}
                 </TabsContent>
               ))}
             </Tabs>
           </div>
-           {/* Footer within main content for last updated time or quick links */}
+          {/* Footer within main content for last updated time or quick links */}
           <footer className="mt-auto pt-8 text-center text-xs text-slate-500 dark:text-slate-400 border-t border-slate-200 dark:border-slate-800">
             <p>&copy; {new Date().getFullYear()} FlowFolio Inc. All rights reserved.</p>
             <p>Dashboard loaded: {currentDate}, {currentTime} (WAT - Abuja, Nigeria).</p>

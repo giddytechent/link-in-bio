@@ -1,4 +1,4 @@
-// app/forgot-password/page.tsx
+// app/login/page.tsx
 import Link from 'next/link';
 import {
   Card,
@@ -8,21 +8,19 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+// Separator is used in LoginForm, so it's fine if not directly here
 import {
   Briefcase, // Placeholder for a generic brand icon
-  KeyRound, // For forgot password theme
-  LogInIcon, // For "Back to Login"
+  UserPlus, // For "Don't have an account?"
 } from 'lucide-react';
-import { ForgotPasswordForm } from '../components/auth/forgot-password-form'; // Import the client component
+import { LoginForm } from '../../components/auth/login-form'; // Import the client component
 
-// Typography Helpers (consistent with previous designs)
 const fontHeading = "font-manrope";
 const fontBody = "font-inter";
 
-export default async function ForgotPasswordPage() {
+export default async function LoginPage() {
   const currentYear = new Date().getFullYear();
-  // User's current time and location from context
-  const currentTime = "9:51 PM WAT"; // From current context
+  const currentTime = "9:12 PM WAT"; // From current context
   const currentDate = "Friday, May 23, 2025"; // From current context
   const userLocation = "Abuja, Federal Capital Territory, Nigeria"; // From current context
 
@@ -44,27 +42,19 @@ export default async function ForgotPasswordPage() {
 
         <Card className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-2xl border-slate-200 dark:border-slate-800/70">
           <CardHeader className="text-center">
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900/50">
-              <KeyRound className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
-            </div>
             <CardTitle className={`text-2xl ${fontHeading} font-bold text-slate-900 dark:text-slate-50`}>
-              Forgot Your Password?
+              Welcome Back!
             </CardTitle>
-            <CardDescription className="text-slate-600 dark:text-slate-400 px-2 sm:px-4">
-              No worries! Enter your email address and we'll send you instructions to reset your password.
+            <CardDescription className="text-slate-600 dark:text-slate-400">
+              Log in to access your dashboard.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-5 pt-2 sm:pt-4">
+          <CardContent className="space-y-5">
             {/* Use the Client Component for the form and its logic */}
-            <ForgotPasswordForm />
+            <LoginForm />
           </CardContent>
           <CardFooter className="justify-center pt-4 pb-6">
-            <p className="text-sm text-slate-600 dark:text-slate-400">
-              Remembered your password?{' '}
-              <Link href="/login" className={`font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-500 hover:underline group inline-flex items-center`}>
-                Back to Log In <LogInIcon className="ml-1 h-4 w-4 group-hover:translate-x-0.5 transition-transform"/>
-              </Link>
-            </p>
+            
           </CardFooter>
         </Card>
       </div>

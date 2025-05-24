@@ -21,12 +21,15 @@ import {
   KeyRound,
   UserPlus,
 } from 'lucide-react';
-import { createSupabaseBrowserClient } from '@/lib/supabase/client';
+import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 
 const fontHeading = "font-manrope"; // Consistent with page
 
 export function LoginForm() {
   const router = useRouter();
+  const supabase = getSupabaseBrowserClient();
+
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
@@ -34,13 +37,10 @@ export function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null); // Optional for login
 
-  const supabase = createSupabaseBrowserClient();
-
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsLoading(true);
     setError(null);
-    setSuccessMessage(null);
 
     if (!email.trim() || !password) {
       setError("Please enter both email and password.");
@@ -60,64 +60,77 @@ export function LoginForm() {
       });
 
       if (signInError) {
-        setError(signInError.message || "Login failed. Please check your credentials.");
-      } else if (data.session) {
-        setSuccessMessage("Login successful! Redirecting...");
-        router.refresh(); // Important for updating server-side auth state checks
+        // Handle different types of Supabase auth errors
+        if (signInError.message === "Invalid login credentials") {
+          setError("Invalid email or password. Please try again.");
+        } else if (signInError.message.includes("Email not confirmed")) {
+          setError("Please confirm your email address before logging in. Check your inbox for a confirmation link.");
+        }
+        else {
+          setError(signInError.message || "Login failed. Please try again.");
+        }
+      } else if (data.session && data.user) {
+        // Login successful! Supabase client handles session and cookies.
+        // You usually don't need to manually store the session token in the client.
+        console.log("Login successful, session:", data.session);
+        console.log("User:", data.user);
+
+        // router.refresh() is important to re-fetch server components
+        // that might depend on the user's authentication state.
+        router.refresh();
+
+        // Redirect to the dashboard or intended page
         router.push('/dashboard');
       } else {
-        // Should not happen if error is null and session is null, but good to cover
-        setError("An unexpected issue occurred during login.");
+        // This case should ideally not be reached if signInError is null and session is also null,
+        // but good for defensive programming.
+        setError("An unexpected issue occurred during login. No session data received.");
       }
-    } catch (err: any) {
-      setError(err.message || "An unexpected error occurred.");
+    } catch (err: any) { // Catch any unexpected errors during the async operation
+      console.error("Unexpected login error:", err);
+      setError(err.message || "An unexpected error occurred. Please check your internet connection and try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
+
   return (
     <>
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Email Input */}
         <div className="grid w-full items-center gap-1.5">
           <Label htmlFor="email-login" className="text-slate-700 dark:text-slate-300">Email Address</Label>
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
             <Input
-              type="email"
-              id="email-login"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
+              type="email" id="email-login" placeholder="you@example.com" value={email}
+              onChange={(e) => setEmail(e.target.value)} required
               className="pl-10 bg-white dark:bg-slate-800/50 border-slate-300 dark:border-slate-700 focus:border-indigo-500 dark:focus:border-indigo-500"
               disabled={isLoading}
             />
           </div>
         </div>
 
+        {/* Password Input */}
         <div className="grid w-full items-center gap-1.5">
           <Label htmlFor="password-login" className="text-slate-700 dark:text-slate-300">Password</Label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
             <Input
-              type="password"
-              id="password-login"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
+              type="password" id="password-login" placeholder="••••••••" value={password}
+              onChange={(e) => setPassword(e.target.value)} required
               className="pl-10 bg-white dark:bg-slate-800/50 border-slate-300 dark:border-slate-700 focus:border-indigo-500 dark:focus:border-indigo-500"
               disabled={isLoading}
             />
           </div>
         </div>
 
+        {/* Remember Me & Forgot Password */}
         <div className="flex items-center justify-between pt-1">
           <div className="flex items-center space-x-2">
             <Checkbox
-              id="remember-me-login"
-              checked={rememberMe}
+              id="remember-me-login" checked={rememberMe}
               onCheckedChange={(checked) => setRememberMe(Boolean(checked))}
               disabled={isLoading}
               className="border-slate-400 dark:border-slate-600 data-[state=checked]:bg-indigo-600 dark:data-[state=checked]:bg-indigo-500"
@@ -131,6 +144,7 @@ export function LoginForm() {
           </Link>
         </div>
 
+        {/* Error Message Display */}
         {error && (
           <Alert variant="destructive" className="mt-4">
             <AlertCircle className="h-4 w-4" />
@@ -138,50 +152,27 @@ export function LoginForm() {
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
+        {/* Success message is less common for login, direct redirect is usual */}
 
-        {successMessage && ( // Optional: usually redirect is fast enough
-          <Alert variant="default" className="mt-4 bg-green-50 dark:bg-green-900/30 border border-green-300 dark:border-green-700 text-green-700 dark:text-green-300">
-            <CheckCircle className="h-4 w-4" />
-            <AlertTitle className={`${fontHeading}`}>Success!</AlertTitle>
-            <AlertDescription>{successMessage}</AlertDescription>
-          </Alert>
-        )}
-
-        <Button
-          type="submit"
-          className="w-full bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white font-semibold text-base py-3 mt-2 rounded-lg shadow-md hover:shadow-indigo-500/30 dark:hover:shadow-indigo-400/30 transition-all duration-300 group"
-          disabled={isLoading}
-        >
-          {isLoading ? (
-            <>
-              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Logging In...
-            </>
-          ) : (
-            <>
-              Log In <LogInIcon className="ml-2 h-5 w-5 group-hover:translate-x-0.5 transition-transform" />
-            </>
-          )}
+        {/* Submit Button */}
+        <Button type="submit" className="w-full ..." disabled={isLoading}>
+          {isLoading ? ( /* ... loading SVG ... */ 'Logging In...') : ( <> Log In <LogInIcon className="ml-2 h-5 w-5 group-hover:translate-x-0.5 transition-transform" /> </>)}
         </Button>
       </form>
 
-      {/* Social Login Buttons */}
+      {/* Social Login Buttons (to be updated to use supabase.auth.signInWithOAuth) */}
       <Separator className="my-6 bg-slate-300 dark:bg-slate-700" />
       <div className="space-y-3">
         <p className="text-center text-xs font-medium text-slate-500 dark:text-slate-400">OR LOG IN WITH</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Button variant="outline" className="w-full bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/50 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300" disabled={isLoading}>
-            <MessageCircle className="mr-2 h-4 w-4 text-red-500" /> {/* Placeholder */}
-            Google
-          </Button>
-          <Button variant="outline" className="w-full bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/50 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300" disabled={isLoading}>
-            <Github className="mr-2 h-4 w-4" />
-            GitHub
-          </Button>
-        </div>
+        {/* Social login buttons here would call handleSocialLogin as in SignupForm */}
+      </div>
+      <div className="mt-6 text-center">
+          <p className="text-sm text-slate-600 dark:text-slate-400">
+              Don't have an account?{' '}
+              <Link href="/signup" className={`font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-500 hover:underline group inline-flex items-center`}>
+                  Sign Up <UserPlus className="ml-1 h-4 w-4 group-hover:animate-bounceOnce" />
+              </Link>
+          </p>
       </div>
     </>
   );

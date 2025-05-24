@@ -11,212 +11,197 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Mail, Lock, User, UserPlus, Github, MessageCircle, AlertCircle, CheckCircle, LogInIcon } from 'lucide-react';
-import { createSupabaseBrowserClient } from '@/lib/supabase/client'; // Import Supabase client
+import { getSupabaseBrowserClient } from '@/lib/supabase/client';
+import { z } from 'zod'; // Import Zod
 
 const fontHeading = "font-manrope";
 
+// Zod Schema for Signup Validation
+const SignupFormSchema = z.object({
+  fullName: z.string().min(2, { message: "Full name must be at least 2 characters." }).trim(),
+  email: z.string().email({ message: "Please enter a valid email address." }),
+  password: z.string().min(8, { message: "Password must be at least 8 characters long." }),
+  confirmPassword: z.string().min(8, { message: "Please confirm your password." }),
+  agreedToTerms: z.literal(true, {
+    errorMap: () => ({ message: "You must agree to the Terms of Service and Privacy Policy." }),
+  }),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords do not match.",
+  path: ["confirmPassword"], // Path of error
+});
+
 export function SignupForm() {
   const router = useRouter();
-  const supabase = createSupabaseBrowserClient(); // Initialize Supabase client
 
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const supabase = getSupabaseBrowserClient();
+
+  const [formData, setFormData] = useState({
+    fullName: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    agreedToTerms: false,
+  });
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [formErrors, setFormErrors] = useState<z.ZodFormattedError<typeof SignupFormSchema._input> | null>(null);
+  const [serverError, setServerError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleCheckboxChange = (checked: boolean | 'indeterminate') => {
+    setFormData(prev => ({ ...prev, agreedToTerms: Boolean(checked) }));
+  };
+
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsLoading(true);
-    setError(null);
+    setFormErrors(null);
+    setServerError(null);
     setSuccessMessage(null);
 
-    // --- Client-Side Validation ---
-    if (!fullName.trim() || !email.trim() || !password || !confirmPassword) {
-      setError("Please fill in all fields.");
+    const validationResult = SignupFormSchema.safeParse(formData);
+
+    if (!validationResult.success) {
+      setFormErrors(validationResult.error.format());
       setIsLoading(false);
       return;
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-        setError("Please enter a valid email address.");
-        setIsLoading(false);
-        return;
-    }
-    if (password !== confirmPassword) {
-      setError("Passwords do not match.");
-      setIsLoading(false);
-      return;
-    }
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters long.");
-      setIsLoading(false);
-      return;
-    }
-    if (!agreedToTerms) {
-      setError("You must agree to the Terms of Service and Privacy Policy.");
-      setIsLoading(false);
-      return;
-    }
-    // --- End Client-Side Validation ---
+
+    const { email, password, fullName } = validationResult.data;
 
     try {
-      // --- Supabase Signup ---
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: email,
         password: password,
         options: {
-          data: { // Optional: store additional user metadata (check Supabase docs for best practices)
+          data: {
             full_name: fullName,
-            // You might need to configure your Supabase table `auth.users` and `public.profiles`
-            // or use `user_metadata` for this.
           },
-          // If email confirmation is enabled in Supabase, the user will get an email.
-          // emailRedirectTo: `${window.location.origin}/auth/callback` // Or your dashboard/login page
+          // emailRedirectTo: `${window.location.origin}/auth/callback` // If email confirm is ON
         },
       });
 
       if (signUpError) {
-        setError(signUpError.message || "Signup failed. Please try again.");
+        let displayError = "Signup failed. Please try again.";
+        if (signUpError.message.includes("User already registered")) {
+          displayError = "This email is already registered. Try logging in or use a different email.";
+        } else if (signUpError.message.includes("rate limit exceeded")) {
+          displayError = "Too many signup attempts. Please try again later.";
+        }
+        setServerError(signUpError.message || "Signup failed. Please try again.");
       } else if (data.user) {
         if (data.user.identities && data.user.identities.length === 0) {
-            // This can happen if "Confirm email" is ON and you are trying to sign up a user that already exists
-            // but is not confirmed yet. Supabase might send a new confirmation email.
-            setSuccessMessage("A confirmation link has been sent to your email address. Please verify to continue.");
+          setSuccessMessage("A confirmation link has been sent to your email address. Please verify to continue.");
         } else if (data.session) {
-            // User is signed up and logged in (if email confirmation is off or already confirmed)
-            setSuccessMessage("Account created and logged in successfully! Redirecting...");
-            // router.refresh() is important to update server component data if any depends on auth state
-            router.refresh();
-            router.push('/dashboard');
+          setSuccessMessage("Account created and logged in successfully! Redirecting...");
+          router.refresh();
+          setTimeout(() => router.push('/dashboard'), 1500);
         } else {
-             // User is signed up, but email confirmation is required
-            setSuccessMessage("Account created! Please check your email to verify your account before logging in.");
-            // Optionally redirect to login or a "check your email" page
-             setTimeout(() => {
-               router.push('/login');
-             }, 3000);
+          setSuccessMessage("Account created! Please check your email to verify your account before logging in.");
+          setTimeout(() => router.push('/login'), 2000);
         }
       } else {
-        // Fallback, should ideally be covered by specific cases above
-        setError("An unexpected issue occurred during signup.");
+        setServerError("An unexpected issue occurred during signup.");
       }
-    } catch (err: any) { // Catch any unexpected errors
+    } catch (err: any) {
       console.error("Unexpected signup error:", err);
-      setError(err.message || "An unexpected error occurred. Please try again.");
+      setServerError(err.message || "An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSocialLogin = async (provider: 'google' | 'github') => {
-    setIsLoading(true);
-    setError(null);
-    const { error: socialError } = await supabase.auth.signInWithOAuth({
-      provider: provider,
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`, // Your OAuth callback route
-      },
-    });
-    if (socialError) {
-      setError(socialError.message || `Failed to sign in with ${provider}.`);
-      setIsLoading(false);
-    }
-    // If successful, Supabase handles the redirect to the provider and then back to your callback.
-  };
-
-  // --- JSX for the form remains largely the same ---
-  // ... (ensure all input fields use the state variables: fullName, email, password, confirmPassword)
-  // ... (ensure Checkbox uses agreedToTerms state)
-  // ... (ensure Button disabled={isLoading} and shows loading state)
-  // ... (Error and Success Alert components are the same)
-
-  // Example modification for Social Login Buttons:
+  // --- JSX for the form ---
+  // Update input fields to use formData and handleChange
+  // Display Zod errors next to each field or in a summary
   return (
     <>
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* ... (All your input fields: Full Name, Email, Password, Confirm Password, Terms) ... */}
-        {/* Full Name Input */}
+        {/* Full Name */}
         <div className="grid w-full items-center gap-1.5">
-          <Label htmlFor="fullName-form" className="text-slate-700 dark:text-slate-300">Full Name</Label>
+          <Label htmlFor="fullName" className="text-slate-700 dark:text-slate-300">Full Name</Label>
           <div className="relative">
             <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
-            <Input
-              type="text" id="fullName-form" placeholder="e.g., Alex Chen" value={fullName}
-              onChange={(e) => setFullName(e.target.value)} required
-              className="pl-10 bg-white dark:bg-slate-800/50 border-slate-300 dark:border-slate-700 focus:border-indigo-500 dark:focus:border-indigo-500"
+            <Input type="text" id="fullName" name="fullName" placeholder="e.g., Alex Chen"
+              value={formData.fullName} onChange={handleChange} required
+              className={`pl-10 ${formErrors?.fullName ? 'border-red-500 dark:border-red-500 focus-visible:ring-red-500' : 'border-slate-300 dark:border-slate-700 focus:border-indigo-500 dark:focus:border-indigo-500'} bg-white dark:bg-slate-800/50`}
               disabled={isLoading}
             />
           </div>
+          {formErrors?.fullName?._errors[0] && <p className="text-xs text-red-600 dark:text-red-400 mt-1">{formErrors.fullName._errors[0]}</p>}
         </div>
 
-        {/* Email Input */}
+        {/* Email */}
         <div className="grid w-full items-center gap-1.5">
-          <Label htmlFor="email-form" className="text-slate-700 dark:text-slate-300">Email Address</Label>
+          <Label htmlFor="email" className="text-slate-700 dark:text-slate-300">Email Address</Label>
           <div className="relative">
             <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
-            <Input
-              type="email" id="email-form" placeholder="you@example.com" value={email}
-              onChange={(e) => setEmail(e.target.value)} required
-              className="pl-10 bg-white dark:bg-slate-800/50 border-slate-300 dark:border-slate-700 focus:border-indigo-500 dark:focus:border-indigo-500"
+            <Input type="email" id="email" name="email" placeholder="you@example.com"
+              value={formData.email} onChange={handleChange} required
+              className={`pl-10 ${formErrors?.email ? 'border-red-500 dark:border-red-500 focus-visible:ring-red-500' : 'border-slate-300 dark:border-slate-700 focus:border-indigo-500 dark:focus:border-indigo-500'} bg-white dark:bg-slate-800/50`}
               disabled={isLoading}
             />
           </div>
+          {formErrors?.email?._errors[0] && <p className="text-xs text-red-600 dark:text-red-400 mt-1">{formErrors.email._errors[0]}</p>}
         </div>
 
-        {/* Password Input */}
+        {/* Password */}
         <div className="grid w-full items-center gap-1.5">
-          <Label htmlFor="password-form" className="text-slate-700 dark:text-slate-300">Password</Label>
+          <Label htmlFor="password" className="text-slate-700 dark:text-slate-300">Password</Label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
-            <Input
-              type="password" id="password-form" placeholder="Minimum 8 characters" value={password}
-              onChange={(e) => setPassword(e.target.value)} required
-              className="pl-10 bg-white dark:bg-slate-800/50 border-slate-300 dark:border-slate-700 focus:border-indigo-500 dark:focus:border-indigo-500"
+            <Input type="password" id="password" name="password" placeholder="Minimum 8 characters"
+              value={formData.password} onChange={handleChange} required
+              className={`pl-10 ${formErrors?.password ? 'border-red-500 dark:border-red-500 focus-visible:ring-red-500' : 'border-slate-300 dark:border-slate-700 focus:border-indigo-500 dark:focus:border-indigo-500'} bg-white dark:bg-slate-800/50`}
               disabled={isLoading}
             />
           </div>
+          {formErrors?.password?._errors[0] && <p className="text-xs text-red-600 dark:text-red-400 mt-1">{formErrors.password._errors[0]}</p>}
         </div>
 
-        {/* Confirm Password Input */}
+        {/* Confirm Password */}
         <div className="grid w-full items-center gap-1.5">
-          <Label htmlFor="confirmPassword-form" className="text-slate-700 dark:text-slate-300">Confirm Password</Label>
+          <Label htmlFor="confirmPassword" className="text-slate-700 dark:text-slate-300">Confirm Password</Label>
           <div className="relative">
             <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
-            <Input
-              type="password" id="confirmPassword-form" placeholder="••••••••" value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)} required
-              className="pl-10 bg-white dark:bg-slate-800/50 border-slate-300 dark:border-slate-700 focus:border-indigo-500 dark:focus:border-indigo-500"
+            <Input type="password" id="confirmPassword" name="confirmPassword" placeholder="••••••••"
+              value={formData.confirmPassword} onChange={handleChange} required
+              className={`pl-10 ${formErrors?.confirmPassword ? 'border-red-500 dark:border-red-500 focus-visible:ring-red-500' : 'border-slate-300 dark:border-slate-700 focus:border-indigo-500 dark:focus:border-indigo-500'} bg-white dark:bg-slate-800/50`}
               disabled={isLoading}
             />
           </div>
+          {formErrors?.confirmPassword?._errors[0] && <p className="text-xs text-red-600 dark:text-red-400 mt-1">{formErrors.confirmPassword._errors[0]}</p>}
         </div>
 
         {/* Terms Checkbox */}
-        <div className="flex items-center space-x-2 pt-2">
+        <div className="flex items-start space-x-2 pt-2"> {/* Changed to items-start for better alignment if error message is long */}
           <Checkbox
-            id="terms-form" checked={agreedToTerms}
-            onCheckedChange={(checked) => setAgreedToTerms(Boolean(checked))}
+            id="agreedToTerms" name="agreedToTerms" checked={formData.agreedToTerms}
+            onCheckedChange={handleCheckboxChange}
             disabled={isLoading}
-            className="border-slate-400 dark:border-slate-600 data-[state=checked]:bg-indigo-600 dark:data-[state=checked]:bg-indigo-500"
+            className={`mt-0.5 ${formErrors?.agreedToTerms ? 'border-red-500 dark:border-red-500 focus-visible:ring-red-500' : 'border-slate-400 dark:border-slate-600'} data-[state=checked]:bg-indigo-600 dark:data-[state=checked]:bg-indigo-500`}
           />
-          <Label htmlFor="terms-form" className="text-xs text-slate-600 dark:text-slate-400 leading-snug cursor-pointer">
-            I agree to FlowFolio's <Link href="/terms" className="font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-500 underline">Terms of Service</Link> and <Link href="/privacy" className="font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-500 underline">Privacy Policy</Link>.
-          </Label>
+          <div className="grid gap-1.5 leading-none">
+            <Label htmlFor="agreedToTerms" className="text-xs text-slate-600 dark:text-slate-400 leading-snug cursor-pointer">
+              I agree to FlowFolio's <Link href="/terms" className="font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-500 underline">Terms of Service</Link> and <Link href="/privacy" className="font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-500 underline">Privacy Policy</Link>.
+            </Label>
+            {formErrors?.agreedToTerms?._errors[0] && <p className="text-xs text-red-600 dark:text-red-400">{formErrors.agreedToTerms._errors[0]}</p>}
+          </div>
         </div>
 
-        {/* Error Message Display */}
-        {error && (
+        {/* Server Error / Success Message Display */}
+        {serverError && (
           <Alert variant="destructive" className="mt-4">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle className={`${fontHeading}`}>Signup Failed</AlertTitle>
-            <AlertDescription>{error}</AlertDescription>
+            <AlertDescription>{serverError}</AlertDescription>
           </Alert>
         )}
-
-        {/* Success Message Display */}
         {successMessage && (
           <Alert variant="default" className="mt-4 bg-green-50 dark:bg-green-900/30 border border-green-300 dark:border-green-700 text-green-700 dark:text-green-300">
             <CheckCircle className="h-4 w-4" />
@@ -225,31 +210,23 @@ export function SignupForm() {
           </Alert>
         )}
 
-        {/* Submit Button */}
         <Button type="submit" className="w-full ..." disabled={isLoading}>
-          {/* ... loading state ... */}
-          {isLoading ? 'Creating Account...' : <>Create Account <UserPlus className="ml-2 h-5 w-5 group-hover:animate-pulse" /></>}
+          {isLoading ? ( /* ... loading SVG ... */ 'Creating Account...') : <>Create Account <UserPlus className="ml-2 h-5 w-5 group-hover:animate-pulse" /></>}
         </Button>
       </form>
 
+      {/* ... (Social Login Buttons and Link to Login - ensure they also use `disabled={isLoading}`) ... */}
       <Separator className="my-6 bg-slate-300 dark:bg-slate-700" />
       <div className="space-y-3">
         <p className="text-center text-xs font-medium text-slate-500 dark:text-slate-400">OR CONTINUE WITH</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Button onClick={() => handleSocialLogin('google')} variant="outline" className="w-full ..." disabled={isLoading}>
-            <MessageCircle className="mr-2 h-4 w-4 text-red-500" /> Google
-          </Button>
-          <Button onClick={() => handleSocialLogin('github')} variant="outline" className="w-full ..." disabled={isLoading}>
-            <Github className="mr-2 h-4 w-4" /> GitHub
-          </Button>
-        </div>
+        {/* ... Social login buttons ... ensure they are also disabled={isLoading} */}
       </div>
       <div className="mt-6 text-center">
         <p className="text-sm text-slate-600 dark:text-slate-400">
-            Already have an account?{' '}
-            <Link href="/login" className={`font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-500 hover:underline group inline-flex items-center`}>
-                Log In <LogInIcon className="ml-1 h-4 w-4 group-hover:translate-x-0.5 transition-transform"/>
-            </Link>
+          Already have an account?{' '}
+          <Link href={isLoading ? "#" : "/login"} className={`font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-500 hover:underline group inline-flex items-center ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}>
+            Log In <LogInIcon className="ml-1 h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
+          </Link>
         </p>
       </div>
     </>

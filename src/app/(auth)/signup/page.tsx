@@ -1,28 +1,31 @@
-// app/reset-password/page.tsx
+// app/signup/page.tsx
 import Link from 'next/link';
+// Remove direct shadcn/ui component imports that are now handled in SignupForm
+// e.g., Input, Label, Checkbox, Alert (unless used elsewhere on this page)
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+
 import {
   Briefcase, // Placeholder for a generic brand icon
-  KeyRound, // For reset password theme
-  LogInIcon, // For "Back to Login"
+  LogInIcon, // For "Already have an account?"
 } from 'lucide-react';
-import { ResetPasswordForm } from '../components/auth/reset-password-form'; // Import the client component
+import { SignupForm } from '../../components/auth/signup-form';
 
+// Typography Helpers (consistent with previous designs)
 const fontHeading = "font-manrope";
 const fontBody = "font-inter";
 
-export default function ResetPasswordPage() { // Removed async as not fetching data directly here
+export default async function SignupPage() {
   const currentYear = new Date().getFullYear();
-  const currentTime = "11:10 PM WAT"; // From current context
-  const currentDate = "Friday, May 23, 2025"; // From current context
-  const userLocation = "Abuja, Federal Capital Territory, Nigeria"; // From current context
+  // User's current time and location from context
+  const currentTime = "8:30 PM WAT"; // Updated time from context
+  const currentDate = "Friday, May 23, 2025"; // Derived from context
+  const userLocation = "Abuja, Federal Capital Territory, Nigeria"; // Provided in context
 
   return (
     <div className={`flex min-h-screen flex-col items-center justify-center bg-slate-100 dark:bg-slate-950 p-4 sm:p-6 ${fontBody} selection:bg-indigo-500 selection:text-white`}>
@@ -38,32 +41,24 @@ export default function ResetPasswordPage() { // Removed async as not fetching d
             <Briefcase className="h-8 w-8" /> {/* Replace with your actual logo icon */}
             FlowFolio
           </Link>
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-400">
+            Create your all-in-one digital presence.
+          </p>
         </div>
 
         <Card className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-2xl border-slate-200 dark:border-slate-800/70">
           <CardHeader className="text-center">
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100 dark:bg-indigo-900/50">
-              <KeyRound className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
-            </div>
             <CardTitle className={`text-2xl ${fontHeading} font-bold text-slate-900 dark:text-slate-50`}>
-              Set New Password
+              Create Your Account
             </CardTitle>
-            <CardDescription className="text-slate-600 dark:text-slate-400 px-2 sm:px-4">
-              Please enter your new password below. Make sure it's strong and secure.
+            <CardDescription className="text-slate-600 dark:text-slate-400">
+              Join FlowFolio and start building today!
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-5 pt-2 sm:pt-4">
+          <CardContent className="space-y-5">
             {/* Use the Client Component for the form and its logic */}
-            <ResetPasswordForm />
+            <SignupForm />
           </CardContent>
-          <CardFooter className="justify-center pt-4 pb-6">
-            <p className="text-sm text-slate-600 dark:text-slate-400">
-              Need to log in?{' '}
-              <Link href="/login" className={`font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-500 hover:underline group inline-flex items-center`}>
-                Go to Log In <LogInIcon className="ml-1 h-4 w-4 group-hover:translate-x-0.5 transition-transform"/>
-              </Link>
-            </p>
-          </CardFooter>
         </Card>
       </div>
 
