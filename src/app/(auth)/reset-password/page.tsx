@@ -8,13 +8,13 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
+} from '@/app/components/ui/card';
 import {
   Briefcase, // Placeholder for a generic brand icon
   KeyRound, // For reset password theme
   LogInIcon, // For "Back to Login"
 } from 'lucide-react';
-import { ResetPasswordForm } from '../../components/auth/reset-password-form'; // Import the client component
+import { ResetPasswordForm } from '@/components/auth/reset-password-form'; // Import the client component
 
 const fontHeading = "font-manrope";
 const fontBody = "font-inter";

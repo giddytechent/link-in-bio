@@ -7,13 +7,13 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
+} from '@/app/components/ui/card';
 // Separator is used in LoginForm, so it's fine if not directly here
 import {
   Briefcase, // Placeholder for a generic brand icon
   UserPlus, // For "Don't have an account?"
 } from 'lucide-react';
-import { LoginForm } from '../../components/auth/login-form'; // Import the client component
+import { LoginForm } from '@/components/auth/login-form'; // Import the client component
 
 const fontHeading = "font-manrope";
 const fontBody = "font-inter";

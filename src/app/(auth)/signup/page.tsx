@@ -8,13 +8,13 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
+} from '@/app/components/ui/card';
 
 import {
   Briefcase, // Placeholder for a generic brand icon
   LogInIcon, // For "Already have an account?"
 } from 'lucide-react';
-import { SignupForm } from '../../components/auth/signup-form';
+import { SignupForm } from '@/components/auth/signup-form';
 
 // Typography Helpers (consistent with previous designs)
 const fontHeading = "font-manrope";

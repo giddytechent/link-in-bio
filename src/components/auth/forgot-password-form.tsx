@@ -6,10 +6,10 @@ import React, { useState } from 'react';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { z } from 'zod';
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/app/components/ui/button';
+import { Input } from '@/app/components/ui/input';
+import { Label } from '@/app/components/ui/label';
+import { Alert, AlertDescription, AlertTitle } from '@/app/components/ui/alert';
 import {
   Mail,
   Send,

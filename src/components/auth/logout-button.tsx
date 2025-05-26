@@ -3,8 +3,8 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button'; // Import only Button, since ButtonProps does not exist
-import { DropdownMenuItem } from '@/components/ui/dropdown-menu'; // To be used within a dropdown
+import { Button } from '@/app/components/ui/button'; // Import only Button, since ButtonProps does not exist
+import { DropdownMenuItem } from '@/app/components/ui/dropdown-menu'; // To be used within a dropdown
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { LogOut } from 'lucide-react';
 

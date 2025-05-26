@@ -7,13 +7,14 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
+} from '@/app/components/ui/card';
 import {
   Briefcase, // Placeholder for a generic brand icon
   KeyRound, // For forgot password theme
   LogInIcon, // For "Back to Login"
 } from 'lucide-react';
-import { ForgotPasswordForm } from '../../components/auth/forgot-password-form'; // Import the client component
+// Update the import path below if your components directory is at 'src/components/auth/forgot-password-form'
+import { ForgotPasswordForm } from '@/components/auth/forgot-password-form'; // Import the client component
 
 // Typography Helpers (consistent with previous designs)
 const fontHeading = "font-manrope";

@@ -1,6 +1,6 @@
 import React from 'react'
 import Link from 'next/link'
-import { Button } from '@/components/ui/button';
+import { Button } from '@/app/components/ui/button';
 import { Sun, Moon, ArrowRight } from 'lucide-react'
 import { MenuIcon } from 'lucide-react'
 
