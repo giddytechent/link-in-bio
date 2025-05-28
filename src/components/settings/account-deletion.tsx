@@ -3,7 +3,7 @@
 
 import React, { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/app/components/ui/button';
+import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,8 +14,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/app/components/ui/alert-dialog";
-import { Alert, AlertDescription, AlertTitle } from '@/app/components/ui/alert';
+} from "@/components/ui/alert-dialog";
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Trash2, AlertTriangle, Loader2, AlertCircle } from 'lucide-react';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 

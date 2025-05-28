@@ -3,17 +3,17 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button } from '@/app/components/ui/button';
-import { Input } from '@/app/components/ui/input';
-import { Label } from '@/app/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/app/components/ui/select";
-import { Alert, AlertDescription, AlertTitle } from '@/app/components/ui/alert';
+} from "@/components/ui/select";
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { PlusCircle, AlertCircle, CheckCircle, Link2Icon, Globe2 } from 'lucide-react';
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 import { z } from 'zod';

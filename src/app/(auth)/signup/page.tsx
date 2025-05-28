@@ -8,7 +8,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/app/components/ui/card';
+} from '@/components/ui/card';
 
 import {
   Briefcase, // Placeholder for a generic brand icon

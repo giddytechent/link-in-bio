@@ -2,7 +2,7 @@
 import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server'; // Your server client utility
 import { CreateProjectForm } from '../../../../components/dashboard/create-project-form'; // We'll create this next
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 

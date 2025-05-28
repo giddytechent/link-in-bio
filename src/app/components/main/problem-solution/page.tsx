@@ -1,5 +1,5 @@
 import React from 'react'
-import { Card, CardHeader, CardTitle, CardContent } from "@/app/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Link2Icon, LayoutTemplate, Palette } from "lucide-react";
 
 const textAccentClass = "text-stone-600 dark:text-stone-400";

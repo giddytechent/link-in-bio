@@ -2,8 +2,8 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
-import { Separator } from '@/app/components/ui/separator';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ProfileSettingsForm } from '../../../../../components/settings/profile-settings-form';
 import { PasswordChangeForm } from '../../../../../components/settings/password-change-form';
 import { AccountDeletionSection } from '../../../../../components/settings/account-deletion';

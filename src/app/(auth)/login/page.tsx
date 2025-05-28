@@ -7,7 +7,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/app/components/ui/card';
+} from '@/components/ui/card';
 // Separator is used in LoginForm, so it's fine if not directly here
 import {
   Briefcase, // Placeholder for a generic brand icon

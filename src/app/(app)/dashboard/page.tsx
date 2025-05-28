@@ -3,19 +3,19 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server'; // Use the utility
 
-import { Button } from '@/app/components/ui/button';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@/app/components/ui/card';
+} from '@/components/ui/card';
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-} from '@/app/components/ui/avatar';
+} from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,11 +23,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/app/components/ui/dropdown-menu';
-import { Badge } from '@/app/components/ui/badge';
-import { Input } from '@/app/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/components/ui/tabs';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/app/components/ui/tooltip';
+} from '@/components/ui/dropdown-menu';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { LogoutButton } from '@/components/auth/logout-button'; // Ensure this path is correct
 import {
   LayoutDashboard,

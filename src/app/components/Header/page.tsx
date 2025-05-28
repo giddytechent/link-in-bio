@@ -1,8 +1,9 @@
 import React from 'react'
 import Link from 'next/link'
-import { Button } from '@/app/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { Sun, Moon, ArrowRight } from 'lucide-react'
 import { MenuIcon } from 'lucide-react'
+import { ThemeToggleButton } from '@/components/theme/theme-toggle-button';
 
 
 const fontHeading = "font-manrope";
@@ -29,6 +30,7 @@ export default function header() {
                         ))}
                     </nav>
                     <div className="flex items-center space-x-3">
+                        <ThemeToggleButton />
                         {/* Dark/Light Mode Toggle Placeholder */}
                         {/*
             DARK/LIGHT MODE TOGGLE NOTE:
